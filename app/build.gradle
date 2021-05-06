@@ -1,0 +1,615 @@
+import java.text.SimpleDateFormat
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+//apply plugin: 'com.getkeepsafe.dexcount' //Count methods etc.
+
+//apply from: 'secrets.gradle'
+//apply from: 'quality.gradle'
+
+//apply from: 'jacoco.gradle'
+
+ext.buildNumber = System.getenv("BUILD_NUMBER") ?: "dev"
+def versionNumber = '5.1.15'
+def incrementalVersionCode = 548
+def versionCodeNumber = "548".toInteger()
+android {
+    compileSdkVersion 29
+    buildToolsVersion '29.0.3'
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+    buildFeatures {
+        viewBinding = true
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    lintOptions {
+        abortOnError false
+    }
+
+    defaultConfig {
+
+        vectorDrawables.useSupportLibrary = true
+
+        applicationId "com.nextmarkets.next"
+
+        minSdkVersion 23
+
+        targetSdkVersion 29
+
+        versionCode versionCodeNumber
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
+
+        buildConfigField "String", "BUILD_DETAILS", "\"code: ${versionCodeNumber}, ${buildDateAndGit()}\""
+
+        buildConfigField "String", "API_USER_AGENT", "\"/${versionNumber}-${versionCodeNumber}-${buildDateAndGit()}\""
+
+        buildConfigField "String", "APP_VERSION", "\"${versionNumber}\""
+
+        buildConfigField "String", "APP_BUILD", "\"${versionCodeNumber}\""
+
+        renderscriptTargetApi 22
+
+        renderscriptSupportModeEnabled true
+
+        javaCompileOptions {
+
+            annotationProcessorOptions {
+
+                includeCompileClasspath false
+
+            }
+
+        }
+
+    }
+
+    configurations.all {
+
+        resolutionStrategy.force 'com.google.code.findbugs:jsr305:1.3.9'
+
+    }
+
+    dexOptions.javaMaxHeapSize = "2g"
+
+    packagingOptions {
+
+        pickFirst 'META-INF/DEPENDENCIES'
+
+        pickFirst 'META-INF/NOTICE'
+
+        pickFirst 'META-INF/LICENSE'
+
+        pickFirst 'META-INF/NOTICE.txt'
+
+        pickFirst 'META-INF/LICENSE.txt'
+
+        pickFirst 'META-INF/services/javax.annotation.processing.Processor'
+
+        exclude 'META-INF/rxjava.properties'
+
+        exclude 'META-INF/*.kotlin_module'
+
+    }
+
+    buildTypes {
+
+        release {
+
+            minifyEnabled true
+
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+        }
+
+        debug {
+
+            ext.enableCrashlytics = false
+
+            versionNameSuffix = "_debug"
+
+            testCoverageEnabled = false
+
+        }
+
+    }
+
+
+    flavorDimensions 'environment'
+
+    productFlavors {
+
+        production {
+
+            dimension 'environment'
+
+            applicationId "com.nextmarkets.next"
+
+            versionName "$versionNumber"
+
+            buildConfigField "Boolean", "PUSH_NOTIFICATIONS_ENABLED", "true"
+
+            buildConfigField "String", "BASE_URL", "\"https://api.nextmarkets.com\""
+
+            buildConfigField "String", "PRODUCT_IMAGE_URL", "\"https://nxmstorprodproductimages.blob.core.windows.net/productimages/\""
+
+            buildConfigField "String", "AUTHADA_URL", "\"https://banking.eid.authada.de/eservice/v3/api/\""
+
+            buildConfigField "String", "AUTHADA_CERT_HASH", "\"aa/aa/aa=\""
+
+            buildConfigField "String", "APP_CENTER_SECRET", "\"aa-4190-4bc6-be5f-aa\""
+
+            buildConfigField "String", "ADJUST_APP_TOKEN", "\"aa\""
+
+// signingConfig signingConfigs.production
+
+        }
+
+        beta {
+
+            dimension 'environment'
+
+            applicationId "com.nextmarkets.next.beta"
+
+            versionName "$versionNumber.$buildNumber (Beta)"
+
+            buildConfigField "Boolean", "PUSH_NOTIFICATIONS_ENABLED", "true"
+
+            buildConfigField "String", "BASE_URL", "\"https://api.nextmarkets.com\""
+
+            ext.betaDistributionGroupAliases = "android-tester"
+
+            ext.betaDistributionReleaseNotesFilePath = "app/releasenotes.txt"
+
+            buildConfigField "String", "PRODUCT_IMAGE_URL", "\"https://nxmstorprodproductimages.blob.core.windows.net/productimages/\""
+
+            buildConfigField "String", "AUTHADA_URL", "\"https://banking.eid.authada.de/eservice/v3/api/\""
+
+            buildConfigField "String", "AUTHADA_CERT_HASH", "\"aa/aa/aa=\""
+
+            buildConfigField "String", "APP_CENTER_SECRET", "\"aa-c0aa-aa-bd4d-aa\""
+
+            buildConfigField "String", "ADJUST_APP_TOKEN", "\"aa\""
+
+// signingConfig signingConfigs.beta
+
+        }
+
+        staging {
+
+            dimension 'environment'
+
+            applicationId "com.nextmarkets.next.staging"
+
+            versionName "$versionNumber (Staging)"
+
+            buildConfigField "Boolean", "PUSH_NOTIFICATIONS_ENABLED", "true"
+
+            buildConfigField "String", "BASE_URL", "\"https://api-alpha.nextmarkets.com\""
+
+            ext.betaDistributionGroupAliases = "android-tester"
+
+            ext.betaDistributionReleaseNotesFilePath = "app/releasenotes.txt"
+
+            buildConfigField "String", "PRODUCT_IMAGE_URL", "\"https://nxmstorstagproductimages.blob.core.windows.net/productimages/\""
+
+            buildConfigField "String", "AUTHADA_URL", "\"https://id.staging.authada.de/eservice/v3/api/\""
+
+            buildConfigField "String", "AUTHADA_CERT_HASH", "\"aa/aa+4aIdjiuY=\""
+
+            buildConfigField "String", "APP_CENTER_SECRET", "\"aa-9d6c-aa-be91-aa\""
+
+            buildConfigField "String", "ADJUST_APP_TOKEN", "\"aa\""
+
+// signingConfig signingConfigs.staging
+
+        }
+
+
+    }
+
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+
+    kotlinOptions {
+
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses"]
+
+//freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xnew-inference"]
+
+    }
+
+}
+
+kapt {
+
+    generateStubs = true
+
+    useBuildCache = true
+
+    mapDiagnosticLocations = true
+
+}
+
+androidExtensions {
+
+// this is used for the Parcelable Kotlin Annotation
+
+    experimental = true
+
+}
+
+dependencies {
+
+    def nav_version = "2.3.1"
+
+    def lifecycle_version = "2.2.0"
+
+    def appCenterSdkVersion = '2.5.1'
+
+    implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
+
+    implementation "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
+
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
+    configurations {
+
+        all*.exclude group: 'com.android.support', module: 'support-v13'
+
+    }
+
+
+
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    implementation group: 'de.authada.library', name: 'aal', version: '4.0.0'
+
+    implementation "de.authada.eid.core:card-impl-android-nfc:2.0.0"
+
+//AndroidX previous Android Support Libs
+
+    implementation 'androidx.core:core-ktx:1.3.2'
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+
+    implementation 'androidx.recyclerview:recyclerview:1.2.0-beta01'
+
+    implementation 'androidx.gridlayout:gridlayout:1.0.0'
+
+    implementation 'androidx.exifinterface:exifinterface:1.3.1'
+
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta6'
+
+    implementation 'androidx.multidex:multidex:2.0.1'
+
+    implementation 'androidx.multidex:multidex-instrumentation:2.0.0'
+
+    implementation 'com.tbuonomo.andrui:viewpagerdotsindicator:3.0.3'
+
+    implementation 'androidx.fragment:fragment-ktx:1.3.0-beta01'
+
+//Android Acchitecture Components
+
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+
+    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+
+//Google/Android Libs
+
+    implementation 'com.google.android.exoplayer:exoplayer:r2.1.1'
+
+    implementation 'com.google.android.material:material:1.2.1'
+
+    implementation 'com.adjust.sdk:adjust-android:4.21.1'
+
+    implementation 'com.android.installreferrer:installreferrer:2.1'
+
+    implementation 'com.google.android.gms:play-services-ads-identifier:17.0.0'
+
+//Google Analytics
+
+    implementation 'com.google.android.gms:play-services-analytics:17.0.0'
+
+    implementation 'com.google.android.gms:play-services-tagmanager:17.0.0'
+
+//Google Firebase
+
+    implementation 'com.google.firebase:firebase-core:18.0.0'
+
+    implementation 'com.google.firebase:firebase-messaging:21.0.0'
+
+    implementation 'com.google.firebase:firebase-crashlytics:17.3.0'
+
+    implementation 'com.google.firebase:firebase-analytics:18.0.0'
+
+    implementation 'com.google.firebase:firebase-perf:19.0.10'
+
+    implementation 'com.google.firebase:firebase-config:20.0.1'
+
+    implementation "com.google.android.material:material:1.3.0-alpha03"
+
+    implementation 'com.highsoft.highcharts:highcharts:8.0'
+
+    implementation 'com.github.anzaizai:EasySwipeMenuLayout:1.1.4' // https://github.com/anzaizai/EasySwipeMenuLayout
+
+// Koin for Android
+
+    implementation "org.koin:koin-android:2.1.6"
+
+// or Koin for Lifecycle scoping
+
+    implementation "org.koin:koin-android-scope:2.1.6"
+
+// or Koin for Android Architecture ViewModel
+
+    implementation "org.koin:koin-android-viewmodel:2.1.6"
+
+    implementation 'com.chaos.view:pinview:1.4.3'
+
+//Coroutines
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9"
+
+//RX
+
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.19'
+
+//RxJava binding APIs for Android UI widgets from the platform and support libraries.
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-core:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-appcompat:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-drawerlayout:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-leanback:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-recyclerview:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-slidingpanelayout:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-swiperefreshlayout:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-viewpager:3.0.0-alpha2'
+
+    implementation 'com.jakewharton.rxbinding3:rxbinding-material:3.0.0-alpha2'
+
+// RxRelay for non-terminal Subscriptions
+
+    implementation 'com.jakewharton.rxrelay3:rxrelay:3.0.0'
+
+    implementation 'com.otaliastudios:cameraview:2.6.4'
+
+//Retrofit
+
+    implementation 'com.squareup.retrofit2:converter-gson:2.7.1'
+
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.7.1'
+
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+
+//is deprateded as far as i know
+
+    implementation 'com.squareup.sqlbrite2:sqlbrite:2.0.0'
+
+    implementation 'petrov.kristiyan:colorpicker-library:1.1.10'
+
+    implementation 'javax.annotation:jsr250-api:1.0'
+
+    implementation 'net.danlew:android.joda:2.10.7'
+
+    testImplementation 'joda-time:joda-time:2.10.7'
+
+    betaImplementation 'com.github.chuckerteam.chucker:library:3.4.0'
+
+    stagingImplementation 'com.github.chuckerteam.chucker:library:3.4.0'
+
+    productionImplementation 'com.github.chuckerteam.chucker:library-no-op:3.4.0'
+
+//Guided Tour Lib
+
+// implementation(name: 'FancyShowCaseView', ext: 'aar')
+
+// implementation 'me.toptas.fancyshowcase:fancyshowcaseview:1.1.5'
+
+//glide
+
+    implementation 'com.github.bumptech.glide:glide:4.9.0'
+
+    kapt 'com.github.bumptech.glide:compiler:4.8.0'
+
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+
+    implementation 'com.orhanobut:dialogplus:1.11@aar'
+
+    implementation 'cn.aigestudio.wheelpicker:WheelPicker:1.1.3'
+
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    implementation 'de.psdev.licensesdialog:licensesdialog:1.8.2'
+
+    implementation 'fr.tvbarthel.blurdialogfragment:lib:2.2.0'
+
+// Image Compression
+
+    implementation 'id.zelory:compressor:2.1.1'
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.10"
+
+    implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.0'
+
+// https://github.com/timusus/RecyclerView-FastScroll
+
+    implementation 'com.simplecityapps:recyclerview-fastscroll:1.0.16'
+
+    implementation 'com.github.Commit451:ModalBottomSheetDialogFragment:1.1.0'
+
+// debugImplementation because LeakCanary should only run in debug builds.
+
+// debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.2'
+
+// Fluent assertions for RxJava's TestSubscriber
+
+    testImplementation('com.github.peter-tackage.assert-rx:assert-rx:0.9.7') {
+
+        exclude group: 'io.reactivex', module: 'rxjava'
+
+    }
+
+    testImplementation 'junit:junit:4.12'
+
+    testImplementation 'com.squareup.okhttp3:mockwebserver:3.9.1'
+
+    testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC3'
+
+    testImplementation 'androidx.arch.core:core-testing:2.1.0'
+
+    testImplementation 'io.kotlintest:kotlintest:2.0.7'
+
+    testImplementation 'com.google.guava:guava:24.1-jre'
+
+// MockK
+
+    testImplementation "io.mockk:mockk:1.10.2"
+
+// Core library
+
+    androidTestImplementation 'androidx.test:core:1.2.0'
+
+    androidTestImplementation "org.mockito:mockito-core:3.5.15"
+
+    androidTestImplementation "org.mockito:mockito-inline:3.5.15"
+
+// AndroidJUnitRunner and JUnit Rules
+
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+
+    androidTestImplementation 'androidx.test:rules:1.2.0'
+
+// Assertions
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+
+    androidTestImplementation 'androidx.test.ext:truth:1.2.0'
+
+    androidTestImplementation 'com.google.truth:truth:0.42'
+
+// Espresso dependencies
+
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.2.0'
+
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.2.0'
+
+    androidTestImplementation 'androidx.test.espresso:espresso-accessibility:3.2.0'
+
+    androidTestImplementation 'androidx.test.espresso:espresso-web:3.2.0'
+
+    androidTestImplementation 'androidx.test.espresso.idling:idling-concurrent:3.2.0'
+
+    androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
+
+    debugImplementation 'androidx.fragment:fragment-testing:1.2.4'
+
+// Optional -- Hamcrest library
+
+    androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
+
+// The following Espresso dependency can be either "implementation"
+
+// or "androidTestImplementation", depending on whether you want the
+
+// dependency to appear on your APK's compile classpath or the test APK
+
+// classpath.
+
+    androidTestImplementation 'androidx.test.espresso:espresso-idling-resource:3.3.0'
+
+    androidTestImplementation 'androidx.multidex:multidex:2.0.1'
+
+    androidTestImplementation 'androidx.multidex:multidex-instrumentation:2.0.0'
+
+    androidTestImplementation 'androidx.annotation:annotation:1.1.0'
+
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.9.1'
+
+//PDF Viewer
+
+    implementation 'com.github.barteksc:android-pdf-viewer:2.8.2'
+
+// Leakcanary
+
+//debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.5'
+
+// PinCode lib
+
+    implementation 'com.github.swapnil1104:OtpEditText:1.0.2-rc'
+
+//Twilio Verify
+
+    implementation("com.twilio:twilio-verify-android:0.3.0")
+
+// Android Device Names
+
+    implementation("com.jaredrummler:android-device-names:2.0.0")
+
+}
+
+def buildDateAndGit() {
+
+    def df = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss")
+
+    def dateString = df.format(new Date())
+
+    def stdout = new ByteArrayOutputStream()
+
+    exec {
+
+        commandLine 'cmd', 'git', 'rev-parse', '--short', 'HEAD'
+
+        standardOutput = stdout
+
+    }
+
+    return dateString + "." + stdout.toString().trim()
+
+}
+
+def commitsOnHead() {
+
+    def stdout = new ByteArrayOutputStream()
+
+    exec {
+
+        commandLine 'cmd', 'git', 'rev-list', '--count', 'HEAD'
+
+        standardOutput = stdout
+
+    }
+
+    return stdout.toString().trim()
+
+}
