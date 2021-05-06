@@ -588,7 +588,7 @@ def buildDateAndGit() {
 
     exec {
 
-        commandLine 'cmd', 'git', 'rev-parse', '--short', 'HEAD'
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
 
         standardOutput = stdout
 
@@ -604,7 +604,7 @@ def commitsOnHead() {
 
     exec {
 
-        commandLine 'cmd', 'git', 'rev-list', '--count', 'HEAD'
+        commandLine 'git', 'rev-list', '--count', 'HEAD'
 
         standardOutput = stdout
 
